@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
+      crossorigin="anonymous"
+    />
+    <script src="https://unpkg.com/mitt/dist/mitt.umd.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+      .block {
+        color: red;
+      }
+      #app {
+        display: block;
+        padding: 1rem;
+        font-size: 1rem;
+      }
+
+      #app > ul > li {
+        margin-left: 0;
+      }
+
+      ul > li {
+        display: block;
+        margin-left: 1rem;
+        margin-bottom: 0.5rem;
+        padding: 8px;
+        background-color: #eee;
+      }
+
+      h2.has-child {
+        cursor: pointer;
+      }
+      h2.has-child::before {
+        content: "+ ";
+      }
+
+      h2.has-child.is-open::before {
+        content: "- ";
+      }
+
+      a {
+        color: #333;
+        text-decoration: none;
+      }
+      a:hover {
+        color: red;
+      }
+
+      /*slot*/
+      #app {
+        position: relative;
+        display: block;
+        padding: 1rem;
+        font-size: 1rem;
+        height: 22rem;
+      }
+
+      button {
+        font-size: 1rem;
+      }
+
+      .lightbox {
+        position: relative;
+        display: block;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+      }
+
+      .modal-mask {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: table;
+        background-color: rgba(0, 0, 0, 0.5);
+        transition: opacity 0.3s ease;
+      }
+
+      .modal-container {
+        cursor: pointer;
+        display: table-cell;
+        vertical-align: middle;
+      }
+
+      .modal-body {
+        cursor: auto;
+        display: block;
+        width: 50%;
+        margin: 0 auto;
+        padding: 2rem;
+        background-color: #fff;
+      }
+      /*slot*/
+
+      /*transition*/
+      .v-enter-from,
+      .v-leave-to {
+        opacity: 0;
+      }
+
+      .v-enter-active,
+      .v-leave-active {
+        transition: opacity 1s;
+      }
+
+      .v-enter-to,
+      .v-leave-from {
+        opacity: 1;
+      }
+      /*transition*/
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h3 ref="title">Root Instance</h3>
+      <my-component></my-component>
+      <my-component></my-component>
+      <media-blockv></media-blockv>
+      <br />
+      <br />
+      <my-component2></my-component2>
+      <my-component2></my-component2>
+      <my-component2></my-component2>
+      <my-component2></my-component2>
+      <br />
+      <br />
+      <my-component3></my-component3>
+      <my-component3></my-component3>
+      <my-component3></my-component3>
+      <my-component3></my-component3>
+      <br />
+      <br />
+      <h3>外層元件: {{ Outer }}</h3>
+      <!-- 從外層要繼承參數時，將子元件的parentksg props 綁在外層元件來的 Outer 參數 -->
+      <my-component4 v-bind:parentksg="Outer"></my-component4>
+      <br />
+      <br />
+      <!-- 有寫v-bind: 傳入會當做數值-->
+      <my-component5 v-bind:propsnumber="456"></my-component5>
+      <!-- 沒寫v-bind: 傳入會當作字串-->
+      <my-component5 propsnumber="999"></my-component5>
+      <br />
+      <br />
+      <ul v-for="book in books" class="book" :key="book.name">
+        <h2>parent component</h2>
+        <li>{{ book.name }}</li>
+        <li>{{ book.author }}</li>
+        <li>{{ book.publishedat }}</li>
+      </ul>
+      <hr />
+      <!--錯誤的範例, parent的data會跟著子元件的修改被異動, 因為物件是以傳參照的方式-->
+      <my-component6 v-for="book in books" :key="book.id" :book-info="book"
+        >uncorrect</my-component6
+      >
+      <hr />
+      <!--正確的範例, 將name, author, publishedAt先以為原始型態的方式給值到對應的props變數名(字串)-->
+      <my-component7
+        v-for="book in books"
+        :name="book.name"
+        :author="book.author"
+        :publishedat="book.publishedat"
+        >correct</my-component7
+      >
+      <hr />
+      <!--將book一次繫結-->
+      <my-component7 v-for="book in books" v-bind="book"
+        >correct another way</my-component7
+      >
+      <br />
+      <br />
+      <!--component8沒有設定props為className和greeting, 子元件也照樣繫結父元件的className和greeting-->
+      <!--當子元件(component8只有一個根節點時才能以預設的方式繫結-->
+      <my-component8 :class="className" @click="greeting"></my-component8>
+      <!--component9與8完全相同, 差別在9有多設定一個inherit:false的屬性, 故不會以預設繫結的方式綁定className和greeting-->
+      <my-component9 :class="className" @click="greeting"></my-component9>
+      <br />
+      <br />
+      <!--將父元件和子元件的message繫結, 但由子元件修改input v-modeel結合的字串修改時, 會有警告訊息(因為嘗試修改父元件的message)-->
+      <my-component10 v-bind:message="message"></my-component10>
+      <!--子元件除props的設定外, 再另外以data的方式承接父元件的message, 即可避免此警告訊息-->
+      <my-component11 v-bind:message="message"></my-component11>
+      <br />
+      <br />
+      <my-component12
+        :title="menuData.name"
+        :child="menuData.childNodes"
+      ></my-component12>
+      <br />
+      <br />
+      <my-component13
+        v-for="(book, idx) in books"
+        :key="book.name"
+        v-bind:="book"
+        @update="updateInfo"
+      ></my-component13>
+      <br />
+      <br />
+      <input type="text" v-model="tograndchild" /><span>
+        :沒有和孫元件連動</span
+      >
+      <br />
+      <input type="text" v-model="synctochild" /><span> :和孫元件連動</span>
+      <my-component14></my-component14>
+      <br />
+      <br />
+      <h1>Total: {{sum}}</h1>
+      <button-counter @add-sum="plus"></button-counter>
+      <button-counter @add-sum="plus"></button-counter>
+      <button-reset></button-reset>
+      <br />
+      <br />
+      <h2>comp total: {{ compsum }}</h2>
+      <my-component15 @comp-add-sum="compplus"></my-component15>
+      <my-component15 @comp-add-sum="compplus"></my-component15>
+      <my-component16></my-component16>
+      <br />
+      <br />
+      <button
+        v-for="tab in tabs"
+        :key="tab"
+        :class="['tab-button', {active: currentTab === tab}]"
+        @click="currentTab = tab"
+      >
+        {{console.log(`currentTab= ${currentTab}`)}} {{tab}}
+      </button>
+      <keep-alive>
+        <tab-home v-if="currentTab === 'Home'"></tab-home>
+      </keep-alive>
+      <keep-alive>
+        <tab-posts v-if="currentTab === 'Posts'"></tab-posts>
+      </keep-alive>
+      <keep-alive>
+        <tab-archive v-if="currentTab === 'Archive'"></tab-archive>
+      </keep-alive>
+      <!--透過v-bind:is 更簡潔的完成動態渲染-->
+      <br />
+      <br />
+      <keep-alive>
+        <component v-bind:is="currentTabComponent"></component>
+      </keep-alive>
+      <!--透過v-bind:is 更簡潔的完成動態渲染-->
+      <br />
+      <br />
+      <!--透過keep-alive在切換頁籤時保留更改屬性的文字, 並透過include和exclude來包含或排除component的name-->
+      <!--,逗號前後不能有空白-->
+      <keep-alive include="tab-home,tab-posts">
+        <component v-bind:is="currentTabComponent"></component>
+      </keep-alive>
+      <keep-alive exclude="tab-home,tab-posts">
+        <component v-bind:is="currentTabComponent"></component>
+      </keep-alive>
+      <!--透過keep-alive在切換頁籤時保留更改屬性的文字, 並透過include和exclude來包含或排除component的name-->
+      <!--,逗號前後不能有空白-->
+      <br />
+      <br />
+      <button
+        v-for="tab in sequences"
+        :key="tab"
+        :class="['tab-button', {active: currentSequence === tab}]"
+        @click="currentSequence = tab"
+      >
+        {{tab}}
+      </button>
+      <!-- <keep-alive> -->
+      <component v-bind:is="currentSeqComponent" @update="notify"></component>
+      <!-- </keep-alive> -->
+      <ul class="inspector">
+        <li v-for="m in msgs">{{ m }}</li>
+      </ul>
+      <br />
+      <br />
+      <!--slot-->
+      <h1>{{ msg }}</h1>
+      <!-- msg 會被 my-component17的模板給替換掉, 若無用slot, 這裡放什麼都沒有意義-->
+      <my-component17>{{ msg }}</my-component17>
+      <!--以下改用slot, slot可以收到父層元件來的變數-->
+      <my-component18>{{ msg }}</my-component18>
+      <!--具名slot-->
+      <my-component19>
+        <template v-slot:header>
+          <h2>008JS好棒棒!</h2>
+          <p>測試第二段</p>
+        </template>
+        <template v-slot:footer>
+          <h2>大家快來買</h2>
+          <p>測試第二段</p>
+        </template>
+        <!--這一段因為沒有指名slot, 故會放在沒有名稱的那一個slot-->
+        <div>
+          <a href="..." target="_blank">購書傳送門</a>
+        </div>
+      </my-component19>
+      <br />
+      <br />
+      <!--動態具名slot-->
+      <label v-for="opt in options">
+        <input type="radio" :value="opt" v-model="dynamic_slot_name" />
+        {{ opt }}
+      </label>
+      <my-component20>
+        <!--透過動態的方式將<h2>008JS好棒棒</h2>選擇放到header, footer, default slot的位置-->
+        <template v-slot:[dynamic_slot_name]>
+          <h2>008JS好棒棒</h2>
+        </template>
+      </my-component20>
+      <!--slot-->
+      <br />
+      <br />
+      <br />
+      <!--Scoped slots-->
+      <p>
+        請選擇:
+        <!--select的v-model="lang", 裡面的lang是從option的value來的-->
+        <select v-model="lang">
+          <option v-for="n in langOptions" :value="n.val">{{ n.name }}</option>
+        </select>
+      </p>
+      <!--雙引號內的lang是從外層來的props, 冒號後的lang指的是子元件自己定義的props名稱-->
+      <my-component21 :lang="lang">
+        <template v-slot:default="props">
+          {{ langOptions.find(d => d.val === lang)['name'] }}: {{ props.hello }}
+        </template>
+      </my-component21>
+      <!--Scoped slots-->
+      <!--transition-->
+      <my-component22></my-component22>
+      <!--transition-->
+    </div>
+  </body>
+  <script type="text/x-template" id="media-block2">
+    <div class="media">
+      <img class="mr-3" src="..." alt="Generic placerholder image" />
+      <div class="media-body">
+        <h5 class="mt-0">Media heading2</h5>
+        <div>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum, saepe.
+        </div>
+      </div>
+    </div>
+  </script>
+
+  <script>
+    //for component12 variable
+    const menuData = {
+      name: "好書推薦",
+      childNodes: [
+        {
+          name: "Git",
+          childNodes: [
+            {
+              name: "為你自己學 Git",
+              url: "https://www.tenlong.com.tw/products/9789864342662",
+            },
+          ],
+        },
+        {
+          name: "前端開發",
+          childNodes: [
+            {
+              name: "金魚都能懂的 CSS 選取器",
+              url: "https://www.tenlong.com.tw/products/9789864344994",
+            },
+            {
+              name: "0 陷阱！0 誤解！8 天重新認識 JavaScript！",
+              url: "https://www.tenlong.com.tw/products/9789864344130",
+            },
+            {
+              name: "讓 TypeScript 成為你全端開發的 ACE！",
+              url: "https://www.tenlong.com.tw/products/9789864344895",
+            },
+          ],
+        },
+        {
+          name: "IoT",
+          childNodes: [
+            {
+              name: "IoT沒那麼難！新手用 JavaScript 入門做自己的玩具！",
+              url: "https://www.tenlong.com.tw/products/9789864345328",
+            },
+          ],
+        },
+        {
+          name: "Chatbot",
+          childNodes: [
+            {
+              name: "人人可作卡米狗：從零打造自己的 LINE 聊天機器人",
+              url: "https://www.tenlong.com.tw/products/9789864342938",
+            },
+          ],
+        },
+      ],
+    };
+    //for component12 variable
+
+    //composition API
+    const { ref, watch, createApp } = Vue;
+
+    const compsum = ref(0);
+    const compplus = () => compsum.value++;
+    const compreset = () => (compsum.value = 0);
+
+    const app = Vue.createApp({
+      data() {
+        return {
+          Outer: "外層元件msg",
+          books: [
+            {
+              id: "a00001",
+              name: "0陷阱!0誤解!8天重新認識Javascript!",
+              author: "Kuro Hsu",
+              publishedat: "2019/09",
+            },
+            {
+              id: "a00002",
+              name: "0陷阱!0誤解!8天重新認識Vue!",
+              author: "Kuro Hsu",
+              publishedat: "2021/02",
+            },
+          ],
+          className: "block",
+          message: "Victory!",
+          menuData,
+          tograndchild: "Hell from App element.",
+          synctochild: "synctochild!",
+          sum: 0,
+          currentTab: "Home",
+          tabs: ["Home", "Posts", "Archive"],
+          msgs: [],
+          currentSequence: "first",
+          sequences: ["first", "second", "third"],
+          msg: "Parent!",
+          options: ["header", "footer", "default"],
+          dynamic_slot_name: "header",
+          langOptions: [
+            { name: "繁體中文", val: "tw", language: "lang1" },
+            { name: "日本語", val: "jp", language: "lang2" },
+            { name: "English", val: "en", language: "lang3" },
+          ],
+          lang: "tw",
+        };
+      },
+      methods: {
+        greeting() {
+          console.log("Hello Vue!");
+        },
+        updateInfo(val) {
+          const idx = this.books.findIndex((d) => (d.id = val.id));
+          this.books[idx] = val;
+        },
+        plus() {
+          this.sum++;
+        },
+        reset() {
+          this.sum = 0;
+        },
+        notify(val) {
+          this.msgs.push(val);
+        },
+      },
+      computed: {
+        //透過v-bind:is的繫結，將tab-[home]的值傳回去，達成只需要寫一個元件就可以根據值回傳三種元件l
+        currentTabComponent() {
+          return `tab-${this.currentTab.toLowerCase()}`;
+        },
+        currentSeqComponent() {
+          return `tab-${this.currentSequence}`;
+        },
+      },
+      provide() {
+        //將this.tograndchild傳遞出去, 使孫元素或深層的元素可以取得此屬性
+        return {
+          providegrandchild: this.tograndchild,
+          providesynctochild: Vue.computed(() => this.synctochild),
+        };
+      },
+      created() {
+        //實體建立時，在bus身上註冊reset事件
+        //觸發事件時呼叫this.rest方法
+        bus.on("reset", this.reset);
+      },
+      setup() {
+        return {
+          compsum,
+          compplus,
+        };
+      },
+    });
+
+    app.component("media-block", {
+      template: `
+      <div class="media">
+        <img class="mr-3" src="..." alt="Generic placerholder image" />
+        <div class="media-body">
+          <h5 class="mt-0">Media heading1</h5>
+          <div>
+            Lorem ipsum dolor, sit amet consectetur adipisicing elit. Vel, optio!
+          </div>
+        </div>
+      </div>
+      `,
+    });
+
+    app.component("my-component", {
+      template: `<div>{{ title }}</div>
+      <media-block></media-block>
+      `,
+      data() {
+        return {
+          title: "Hello Vue 3.x!",
+        };
+      },
+      prods: {},
+      computed: {},
+      methods: {},
+    });
+
+    app.component("media-blockv", {
+      template: `#media-block2`,
+    });
+
+    const globalVar = { gcount: 0 };
+
+    app.component("my-component2", {
+      template: `
+      <div class="data-block">
+        <div>共用Count: {{ gcount }}</div>
+          <button @click="gcount++">Plus</button>
+      </div>
+      `,
+      data() {
+        return globalVar; //外層區域的變數，導致my-component2用到gcount時，會共用到同一個變數
+      },
+    });
+
+    app.component("my-component3", {
+      template: `
+      <div class="data-block">
+        <div>未共用Count: {{ localCount }}</div>
+          <button @click="localCount++">Plus</button>
+      </div>
+      `,
+      data: () => ({ localCount: 0 }), //由內部回傳localCount變數，每一個my-component3會有各自的localCount，不會互相汙染
+    });
+
+    app.component("my-component4", {
+      template: `
+        <div class="component">
+          <div>從props來的parentMesg ==> {{ parentksg }}</div>
+          <div>自己的msg ==> {{ msgInner }}</div>
+        </div>
+      `,
+      props: ["parentksg"], //由父元件傳遞過來的參數, 在子元件重新命名為parentksg
+      data() {
+        return {
+          msgInner: "子元件msg",
+        };
+      },
+    });
+
+    app.component("my-component5", {
+      template: `
+      <div>從propsnumber來的 ==> {{ propsnumber }}</div>
+      `,
+      props: {
+        propsnumber: {
+          type: [Number, String], //限制型態
+          required: true, //必須提供
+          default: 123, // 預設值
+          validator: (para) => para > 0, //驗證propsnumber是否大於0
+          //上述的限制都只會跳警告訊息，並不會真的造成網頁crash
+          //props初始化時優先於data和computed
+        },
+      },
+    });
+
+    app.component("my-component6", {
+      template: `
+        <div class="child-app">
+          <h2>child1 component</h2>
+          <div>書名: <input type="text" v-model="bookInfo.name" /></div>
+          <div>作者: <input type="text" v-model="bookInfo.author" /></div>
+          <div>出版日: <input type="text" v-model="bookInfo.publishedat" /></div>
+        </div>
+      `,
+      props: {
+        bookInfo: {
+          type: Object,
+        },
+      },
+    });
+
+    app.component("my-component7", {
+      template: `
+        <div class="child-app">
+          <h2>child2 component</h2>
+          <div>書名: <input type="text" v-model="name" /></div>
+          <div>作者: <input type="text" v-model="author" /></div>
+          <div>出版日: <input type="text" v-model="publishedat" /></div>
+        </div>
+      `,
+      props: ["name", "author", "publishedat"],
+    });
+
+    app.component("my-component8", {
+      template: `
+        <div class="child-app">component8-1</div>
+      `,
+    });
+
+    app.component("my-component9", {
+      template: `
+        <div class="child-app">component9-1</div>
+      `,
+      inheritAttrs: false,
+    });
+
+    app.component("my-component10", {
+      template: `
+        <div><input type="text" v-model="message" /></div>
+      `,
+      props: ["message"],
+    });
+
+    app.component("my-component11", {
+      template: `
+        <div><input type="text" v-model="childmessage" /></div>
+      `,
+      props: ["message"],
+      //從props拿到父元件來的message, 再由data this.message複製一分到自己的childmessage
+      data() {
+        return {
+          childmessage: this.message,
+        };
+      },
+    });
+
+    //recursive component
+    app.component("my-component12", {
+      name: `my-component12`,
+      template: `
+        <ul>
+            <li>
+              <template v-if="child.length > 0">
+                <h2
+                  class="has-child"
+                  :class="{ 'is-open': isOpen }"
+                  @click="isOpen = !isOpen"
+                >
+                  {{ title }}
+                </h2>
+                <my-component12
+                  v-show="isOpen"
+                  v-for="c in child"
+                  :key="c.name"
+                  :title="c.name"
+                  :child="c.childNodes"
+                  :url="c.url"
+                ></my-component12>
+              </template>
+              <a v-else :href="url" target="_blank">{{ title }}</a>
+            </li>
+        </ul>
+      `,
+      props: {
+        title: String,
+        url: String,
+        child: {
+          type: Array,
+          default: [],
+        },
+      },
+      data() {
+        return {
+          isOpen: false,
+        };
+      },
+    });
+
+    app.component("my-component13", {
+      template: `
+        <div class="child-app">
+          <h2>child2 component</h2>
+          <div>書名: <input type="text" v-model="bookInfo.name" /></div>
+          <div>作者: <input type="text" v-model="bookInfo.author" /></div>
+          <div>出版日: <input type="text" v-model="bookInfo.publishedat" /></div>
+        </div>
+      `,
+      props: ["id", "name", "author", "publishedat"],
+      data() {
+        return {
+          bookInfo: {
+            id: this.id,
+            name: this.name,
+            author: this.author,
+            publishedat: this.publishedat,
+          },
+        };
+      },
+      watch: {
+        bookInfo: {
+          deep: true,
+          handler(val) {
+            console.log(`這是啥: ${val.id} ${val.name}`);
+            this.$emit("update", val);
+          },
+        },
+      },
+    });
+
+    app.component("my-component14", {
+      template: `
+        <ul>
+          <li v-for="i in 3">
+            {{ i }}
+            <list-item />
+          </li>
+        </ul>`,
+      components: {
+        "list-item": {
+          //於孫元件取得App provide的屬性providegrandchild, 但此屬性不會跟著父元件變動
+          //若要跟著父元件一起變動, 則需在父元件provide裡面在包一層computed方法
+          inject: ["providegrandchild", "providesynctochild"],
+          template: `
+            <div>{{ providegrandchild }}</div>
+            <div>{{ providesynctochild }}</div>
+          `,
+        },
+      },
+    });
+
+    //eventbus 訂閱機制的事件傳遞，現已過時，改用vuex或composition API
+    const bus = mitt();
+
+    app.component("button-counter", {
+      template: `
+        <button @click="plus"> You clicked me {{ count }} times.</button>
+      `,
+      data() {
+        return {
+          count: 0,
+        };
+      },
+      methods: {
+        plus() {
+          //自己的count加一
+          this.count++;
+          //觸發在v-on註冊的add-sum事件
+          this.$emit("add-sum");
+        },
+        reset() {
+          this.count = 0;
+        },
+      },
+      created() {
+        //訂閱bus的clear事件
+        bus.on("clear", this.reset);
+      },
+    });
+
+    app.component("button-reset", {
+      template: `
+        <button @click="reset">rest</button>
+      `,
+      methods: {
+        reset() {
+          //觸發bus的clear和reset事件
+          bus.emit("clear");
+          bus.emit("reset");
+        },
+      },
+    });
+    //eventbus 訂閱機制的事件傳遞，現已過時，改用vuex或composition API
+
+    //composition API
+    app.component("my-component15", {
+      template: `
+      <button @click="compplus"> You clicked me {{ compcount }} times.</button>
+      `,
+      setup(props, { emit }) {
+        const compcount = ref(0);
+
+        //透過emit傳遞自定義事件
+        const compplus = () => {
+          compcount.value++;
+          emit("comp-add-sum");
+        };
+
+        //觀察compsum的變化, 若compsum為0代表要rest count的內容
+        watch(
+          compsum,
+          (v) => (compcount.value = v === 0 ? 0 : compcount.value)
+        );
+
+        //將模板要用到的compcount, compplus回傳
+        return {
+          compcount,
+          compplus,
+        };
+      },
+    });
+
+    app.component("my-component16", {
+      template: `
+      <button @click="compreset">comprest</button>
+      `,
+      setup() {
+        //將模板用到的comprest回傳
+        return {
+          compreset,
+        };
+      },
+    });
+    //composition API
+
+    //動態渲染
+    app.component("tab-home", {
+      name: "tab-home",
+      template: `
+        <div class="demo-tab"><input v-model="title" /></div>
+      `,
+      data: () => ({
+        title: "Home component",
+      }),
+    });
+
+    app.component("tab-posts", {
+      name: "tab-posts",
+      template: `
+        <div class="demo-tab"><input v-model="title" /></div>
+      `,
+      data: () => ({
+        title: "Post component",
+      }),
+    });
+
+    app.component("tab-archive", {
+      name: "tab-archive",
+      template: `
+        <div class="demo-tab"><input v-model="title" /></div>
+      `,
+      data: () => ({
+        title: "Archive component",
+      }),
+    });
+    //動態渲染
+
+    //動態渲染, 從html component調整 是否有keep-live, 確認生命週期
+    app.component("tab-first", {
+      name: "tab-first",
+      template: `
+        <div class="demo-tab"><input v-model="title" /></div>
+      `,
+      data: () => ({
+        title: "first component",
+      }),
+      created() {
+        this.$emit("update", `${this.$options.name} Created.`);
+      },
+      mounted() {
+        this.$emit("update", `${this.$options.name} Mounted.`);
+      },
+      unmounted() {
+        this.$emit("update", `${this.$options.name} Unmounted.`);
+      },
+      //activated, deactivated只有在設定keep-alive時才會被呼叫
+      activated() {
+        this.$emit("update", `${this.$options.name} Activated.`);
+      },
+      deactivated() {
+        this.$emit("update", `${this.$options.name} Deactivated.`);
+      },
+    });
+
+    app.component("tab-second", {
+      name: "tab-second",
+      template: `
+        <div class="demo-tab"><input v-model="title" /></div>
+      `,
+      data: () => ({
+        title: "second component",
+      }),
+      created() {
+        this.$emit("update", `${this.$options.name} Created.`);
+      },
+      mounted() {
+        this.$emit("update", `${this.$options.name} Mounted.`);
+      },
+      unmounted() {
+        this.$emit("update", `${this.$options.name} Unmounted.`);
+      },
+      //activated, deactivated只有在設定keep-alive時才會被呼叫
+      activated() {
+        this.$emit("update", `${this.$options.name} Activated.`);
+      },
+      deactivated() {
+        this.$emit("update", `${this.$options.name} Deactivated.`);
+      },
+    });
+
+    app.component("tab-third", {
+      name: "tab-third",
+      template: `
+        <div class="demo-tab"><input v-model="title" /></div>
+      `,
+      data: () => ({
+        title: "third component",
+      }),
+      created() {
+        this.$emit("update", `${this.$options.name} Created.`);
+      },
+      mounted() {
+        this.$emit("update", `${this.$options.name} Mounted.`);
+      },
+      unmounted() {
+        this.$emit("update", `${this.$options.name} Unmounted.`);
+      },
+      //activated, deactivated只有在設定keep-alive時才會被呼叫
+      activated() {
+        this.$emit("update", `${this.$options.name} Activated.`);
+      },
+      deactivated() {
+        this.$emit("update", `${this.$options.name} Deactivated.`);
+      },
+    });
+    //動態渲染, 無keep-live, 確認生命週期
+
+    app.component("my-component17", {
+      template: `
+        <!--裡面的msg是子元件自己的msg, 所以會顯示Child-->
+        <div>Hello! {{ msg }} </div>
+      `,
+      data() {
+        return {
+          msg: "Child!",
+        };
+      },
+    });
+
+    app.component("my-component18", {
+      template: `
+        <div>
+          Hello!
+          <div>
+            <!--專門用來接收父元件, 也可以提供預設內容, 當此元件中的空位沒有放外層來的data時則顯示預設內容-->
+            <slot>default message</slot>
+          </div>
+        </div>
+      `,
+      data() {
+        return {
+          msg1: "Child!",
+        };
+      },
+    });
+
+    app.component("my-component19", {
+      template: `
+        <div class="lightbox">
+          <div class="modal-mask" :style="modalStyle">
+            <div class="modal-container" @click.self="toggleModal">
+              <div class="modal-body">
+                <header>
+                  <slot name="header">Default Header</slot>
+                </header>
+                <hr>
+                <main>
+                  <slot>Default Body</slot>
+                </main>
+                <hr>
+                <footer>
+                  <slot name="footer">Default Footer</slot>
+                </footer>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button @click="isShow = true">Open toggle</button>
+      `,
+      data: () => ({ isShow: false }),
+      computed: {
+        modalStyle() {
+          return {
+            display: this.isShow ? "" : "none",
+          };
+        },
+      },
+      methods: {
+        toggleModal() {
+          this.isShow = !this.isShow;
+        },
+      },
+    });
+
+    app.component("my-component20", {
+      template: `
+        <div class="lightbox">
+          <div class="modal-mask" :style="modalStyle">
+            <div class="modal-container" @click.self="toggleModal">
+              <div class="modal-body">
+                <header>
+                  <slot name="header">Default Header</slot>
+                </header>
+                <hr>
+                <main>
+                  <slot>Default Body</slot>
+                </main>
+                <hr>
+                <footer>
+                  <slot name="footer">Default Footer</slot>
+                </footer>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button @click="isShow = true">Open toggle</button>
+      `,
+      data: () => ({ isShow: false }),
+      computed: {
+        modalStyle() {
+          return {
+            display: this.isShow ? "" : "none",
+          };
+        },
+      },
+      methods: {
+        toggleModal() {
+          this.isShow = !this.isShow;
+        },
+      },
+    });
+
+    app.component("my-component21", {
+      template: `
+        <div class="lightbox">
+          <!--加上teleport, 可讓 modal-mask直接渲染在body底下, 使其可覆蓋整個父元件-->
+          <teleport to="body">
+            <div class="modal-mask" :style="modalStyle">
+              <div class="modal-container" @click.self="toggleModal">
+                <div class="modal-body">
+                  <main>
+                    <slot v-bind:hello="helloString[lang]"></slot>
+                  </main>
+                  <hr>
+                </div>
+              </div>
+            </div>
+          </teleport>
+
+          <button @click="isShow = true">Open toggle</button>
+        </div>
+      `,
+      props: {
+        lang: {
+          type: String,
+          /*default: "tw",*/
+        },
+      },
+      data() {
+        return {
+          isShow: false,
+          helloString: {
+            tw: "哈囉！世界！",
+            jp: "ハロー・ワールド!",
+            en: "Hello world!",
+          },
+        };
+      },
+      computed: {
+        modalStyle() {
+          return {
+            display: this.isShow ? "" : "none",
+          };
+        },
+      },
+      methods: {
+        toggleModal() {
+          this.isShow = !this.isShow;
+        },
+      },
+    });
+
+    app.component("my-component22", {
+      template: `
+        <transition>
+          <div v-show="isShow">Hello VUE!</div>
+        </transition>
+
+        <button @click="isShow = !isShow">Toggle</button>
+      `,
+      data() {
+        return {
+          isShow: true,
+        };
+      },
+    });
+
+    app.mount("#app");
+  </script>
+</html>

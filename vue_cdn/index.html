@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
+      crossorigin="anonymous"
+    />
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+      .error {
+        border: red solid 1px;
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>{{ message }}</h1>
+      <input type="text" v-model="message" />
+      <input type="number" v-model="price" />
+      <p>1 JPY = 0.278 TWD</p>
+      <div>TWD: <input type="text" v-model="twd" /></div>
+      <div>JPY: <input type="text" v-model="jpy" /></div>
+      <div>USD: <input type="text" v-model="usd" /></div>
+      <div v-bind:id="vueid">...</div>
+      <button :disabled="isBtnDisabled">click</button>
+      <br />
+      <br />
+
+      <!--單向綁定--, input改變時, 不會連動到data內的singleWay, 所以下方{{single}}的值不會跟著變化-->
+      <input type="text" v-bind:value="singleWay"/>
+      <pre>單向綁定上方input的值: {{singleWay}}</pre>
+      <!--
+        單向綁定只能透過, 
+        程式內部去改變singleWay的值, 
+        這裡嘗試以按button時呼叫method來改變
+      -->
+      <button v-on:click="changeSingleWay">改變上方單向綁定的值</button> 
+      <!--單向綁定-->
+      <br />
+      <br />
+      <br />
+      <!--雙向綁定, input改變時, 同時也會連動到data內的twoWay, 所以下方的{{twoWay}}的值會跟著變化-->
+      <!--此時被雙向綁定的input value屬性會失效, 且也不能將value再做單向綁定, 顯示會變得異常-->
+      <input type="text" v-model="twoWay"/>
+      <pre>雙向綁定上方input的值: {{twoWay}}</pre>
+      <!--雙向綁定-->
+      <br />
+      <br />
+      <input v-model="vueid" placeholder="edit me" />
+      <p>vueid is: {{vueid}}</p>
+      <br />
+      <p><span>Mutline message is: </span> {{message}}</p>
+      <textarea v-model="message"></textarea>
+      <br />
+      <div>
+        <input type="radio" id="one" value="1" v-model="picked" />
+        <label for="one">One</label>
+      </div>
+      <div>
+        <input type="radio" id="two" value="2" v-model="picked" />
+        <label for="two">Two</label>
+      </div>
+      <span>Picked: {{picked}} </span>
+      <div>
+        <br />
+        <input type="checkbox" id="jack" value="jack" v-model="checkNames" />
+        <label for="jack">Jack</label>
+        <input type="checkbox" id="john" value="john" v-model="checkNames" />
+        <label for="john">John</label>
+        <input type="checkbox" id="mike" value="mike" v-model="checkNames" />
+        <label for="mike">Mike</label>
+        <input type="checkbox" id="mary" value="mary" v-model="checkNames" />
+        <label for="mary">Mary</label>
+        <p>Checked names: {{ checkNames }}</p>
+      </div>
+      <div>
+        <select v-model="selected">
+          <option value="" disabled>請選擇</option>
+          <option value="台北市">台北市</option>
+          <option value="新北市">新北市</option>
+          <option value="基隆市">基隆市</option>
+        </select>
+        <p>Selected: {{ selected || "未選擇" }}</p>
+      </div>
+      <input v-model.number="num1" /> + <input v-model.number="num2" /> = {{ sum
+      }}
+
+      <br />
+      <div v-text="text">World!</div>
+      <div>{{text}} World!</div>
+      <div v-html="text"></div>
+      <br />
+      <div v-text="texts"></div>
+      <div v-once>{{texts}}</div>
+      <div v-pre>{{ texts }}</div>
+      <input type="text" v-model="texts" />
+      <br />
+      <br />
+      <input
+        type="text"
+        v-model.trim="message"
+        v-bind:class="{'error':message.length > 10}"
+      />
+      <br />
+      <br />
+      <input
+        type="text"
+        v-model.trim="message"
+        placeholder="請勿超過10個字"
+        v-bind:style="msgStyle"
+      />
+      <br />
+      <p>Count: {{count}}</p>
+      <button v-on:click="plus">Plus</button>
+      <br />
+      <button v-on:click="console.log('hello')">Click</button>
+      <button @click="console.log('hello')">Click</button>
+      <br />
+      <button v-on:click="geo">event object</button>
+      <br />
+      <br />
+      <p><input v-model.number="amount" /></p>
+      <p>Count: {{count}}</p>
+      <button v-on:click="geo2(amount, $event)">
+        event object with parameter
+      </button>
+      <div @click="console.log('Outer')">
+        <span>Outer</span>
+        <div @click="console.log('Inner')">Inner</div>
+      </div>
+      <br />
+      <br />
+      <div @click="console.log('Outer')">
+        <span>Outer</span>
+        <div @click.stop="console.log('Inner')">Inner</div>
+      </div>
+      <br />
+      <br />
+      <a href="#" @click="console.log('NoPrevent')">click me</a>
+      <br />
+      <a href="#" @click.prevent="console.log('Prevent')">click me</a><br />
+      <div @click.capture="console.log('Outer')">
+        <span>Outer</span>
+        <div @click.stop="console.log('Inner')">Inner</div>
+      </div>
+      <br />
+      <p v-text="count"></p>
+      <button @click.once="plus">Plus Once</button>
+      <br />
+      <input
+        type="text"
+        placeholder="輸入任意文字後按下Enter"
+        v-model.trim="message"
+        @keydown.enter="addToMessages"
+      />
+      <br />
+      <input
+        type="text"
+        placeholder="輸入任意文字後按下Enter"
+        v-model.trim="message"
+        @keydown.enter.exact="addToMessages"
+      />
+      <div v-if="isShow">v-if</div>
+      <div v-show="isShow">v-show</div>
+      <br />
+      <div v-if="count === 0">Block A</div>
+      <div v-else-if="count < 5">Block B</div>
+      <div v-else>Block C</div>
+      <br />
+      <br />
+      <!-- value === 'A' 時出現-->
+      <template v-if="value === 'A'">
+        <h1>Title A</h1>
+        <p>Paragraph A-1</p>
+        <p>Paragraph A-2</p>
+      </template>
+      <!-- value !== 'A' 時出現-->
+      <template v-else>
+        <h1>Title B</h1>
+        <p>Paragraph B-1</p>
+        <p>Paragraph B-2</p>
+      </template>
+      <br />
+      <br />
+      <template v-if="loginType === 'username'">
+        <label>Username </label>
+        <input v-model="loginType" placeholder="Enter your username" />
+      </template>
+      <template v-else>
+        <label>Email</label>
+        <input placeholder="Enter your email address" />
+      </template>
+      <br />
+      <br />
+      <ul>
+        <li v-for="(x, i) in arr">{{i}} / {{x}}</li>
+      </ul>
+      <br />
+      <ul>
+        <li v-for="(val, k, i) in book">{{i}} / {{k}} : {{val}}</li>
+      </ul>
+      <br />
+      <ul class="pagination">
+        <li class="page-item"><a class="page-link" href>&lt;</a></li>
+        <!--1~10出現10次-->
+        <li class="page-item" v-for="page in 5">
+          <a class="page-link" href>{{page}}</a>
+        </li>
+        <li class="page-item"><a class="page-link" href>&gt;</a></li>
+      </ul>
+      <div class="dropdown-menu">
+        <template v-for="i in links">
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" :href="i.link">{{i.title}}</a>
+        </template>
+      </div>
+      <div class="block" v-for="i in evenNumbers">{{i}}</div>
+      <br />
+      <br />
+      <div v-for="i in sortedNumbers">{{i}}</div>
+      <!-- Todo list -->
+      <h1>Todo</h1>
+      <ul>
+        <li v-for="i in todolists" :key="i.id">
+          <label><input v-model="i.isDone" type="checkbox" />{{i.title}}</label>
+        </li>
+      </ul>
+      <!-- Done list -->
+      <h1>Done</h1>
+      <ul>
+        <li v-for="i in donelists" :key="i.id">
+          <label><input v-model="i.isDone" type="checkbox" />{{i.title}}</label>
+        </li>
+      </ul>
+      <br />
+      <br />
+      <div class="messages">
+        <div v-for="m in messages">{{ m }}</div>
+      </div>
+      <input
+        type="text"
+        placeholder="輸入任意文字後按下Enter"
+        v-model.trim="msg"
+        @keydown.enter="addMessage"
+      />
+    </div>
+  </body>
+  <script>
+    const vm1 = Vue.createApp({
+      data() {
+        return {
+          message: "Hello",
+          price: 1000,
+          quantity: 100,
+          twd: 0.278,
+          singleWay: "單向綁定資料預設值",
+          twoWay: "雙向綁定資料預設值",
+          vueid: "testVueID",
+          isBtnDisabled: true,
+          picked: 2,
+          checkNames: ["mary"],
+          selected: "",
+          num1: 0,
+          num2: 0,
+          text: "<h1>Title</h1>",
+          texts: "test text.",
+          count: 0,
+          amount: 0,
+          isShow: true,
+          value: "B",
+          loginType: "username",
+          arr: ["008", "JS", "is", "awesome"],
+          book: {
+            title: "vuejs",
+            author: "kuro",
+            publishedat: "2023/05",
+          },
+          links: [
+            { link: "vvv", title: "title1" },
+            { link: "233", title: "title2" },
+          ],
+          numbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          lists: [
+            { id: "task001", title: "選項1", isDone: false },
+            { id: "task002", title: "選項2", isDone: false },
+            { id: "task003", title: "選項3", isDone: false },
+          ],
+          msg: "",
+          messages: ["Hello", "Vue.js", "Good Job"],
+        };
+      },
+      created() {
+        console.log("created");
+      },
+      mounted() {
+        console.log("mounted");
+      },
+      unmounted() {
+        console.log("unmounted");
+      },
+      watch: {
+        message(val, oldValue) {
+          console.log(`new message: ${val}`);
+          console.log(`old message: ${oldValue}`);
+        },
+      },
+      computed: {
+        subtotalComputed: function () {
+          console.log("computed");
+          return this.price * this.quantity;
+        },
+        jpy: {
+          get() {
+            return Number.parseFloat(Number(this.twd) / 0.278).toFixed(3);
+          },
+          set(val) {
+            this.twd = Number.parseFloat(Number(val) * 0.278).toFixed(3);
+          },
+        },
+        usd: {
+          get() {
+            return Number.parseFloat(Number(this.twd) / 30).toFixed(3);
+          },
+          set(val) {
+            this.twd = Number.parseFloat(Number(val) * 30).toFixed(3);
+          },
+        },
+        sum() {
+          return this.num1 + this.num2;
+        },
+        sumFix() {
+          return this.num1 + this.num2;
+        },
+        isValid: function () {
+          return this.message.length <= 10;
+        },
+        msgStyle: function () {
+          return {
+            border: this.isValid ? "" : "red solid 1px",
+            color: this.isValid ? "" : "red",
+          };
+        },
+        evenNumbers() {
+          return this.numbers.filter((number) => number % 2 === 0);
+        },
+        sortedNumbers() {
+          //複製一份numbers, 避免原numbers被排序影響
+          return [...this.numbers].sort((a, b) => b - a);
+        },
+        todolists() {
+          return this.lists.filter((d) => !d.isDone);
+        },
+        donelists() {
+          return this.lists.filter((d) => d.isDone);
+        },
+      },
+      methods: {
+        subtotalMethods: function (x = 5, y = 5) {
+          console.log("methods");
+          return x * y;
+        },
+        twd2jpy: function () {
+          this.jpy = Number.parseFloat(Number(this.twd) / 0.278).toFixed(3);
+        },
+        jpy2twd: function () {
+          this.twd = Number.parseFloat(Number(this.jpy) * 0.278).toFixed(3);
+        },
+        changeSingleWay() {
+          if(this.singleWay === "單向綁定資料預設值") {
+            this.singleWay = "單向綁定資料的值被改變了...!";
+          } else {
+            //恢復成預設值
+            this.singleWay = "單向綁定資料預設值";
+          }
+          
+        },
+        plus() {
+          this.count++;
+        },
+        geo: function (x) {
+          console.log(x.target.tagName);
+        },
+        geo2(p1amount, p2event) {
+          console.log(p2event.target.tagName);
+          this.count += p1amount;
+        },
+        addToMessages() {
+          this.message += "Append ";
+        },
+        addMessage() {
+          this.messages.push(this.msg);
+          this.msg = "";
+
+          // this.$nextTick(() => {
+          const el = document.querySelector(".messages");
+          console.log(el);
+          el.scrollTop = el.scrollHeight;
+          // });
+        },
+      },
+    });
+
+    vm1.mount("#app");
+
+    //vm1.unmount();
+  </script>
+</html>
