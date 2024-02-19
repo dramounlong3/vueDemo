@@ -250,7 +250,12 @@
         v-model.trim="msg"
         @keydown.enter="addMessage"
       />
+      <br>
+      <!--避免tag: a, 在被點擊後執行完method, 又會轉換到href內的連結-->
+      <!--也可將href刪除做到相同的效果, 但tag: a內的文字就不會有超連結的形式 可能會導致使用者較不易辨別, 需要額外設定class-->
+      <div><a href="#" @click.prevent="testClickLink">testLink</a></div>
     </div>
+    
   </body>
   <script>
     const vm1 = Vue.createApp({
@@ -404,6 +409,9 @@
           el.scrollTop = el.scrollHeight;
           // });
         },
+        testClickLink() {
+          alert("點擊<a>標籤");
+        }
       },
     });
 
